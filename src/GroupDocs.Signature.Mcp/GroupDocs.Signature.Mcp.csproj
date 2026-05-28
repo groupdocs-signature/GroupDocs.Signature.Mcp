@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>GroupDocs.Signature.Mcp</PackageId>
+    <Version>$(GroupDocsSignatureMcp)</Version>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>MCP server exposing GroupDocs.Signature for .NET — sign documents with text, QR code, barcode, image, or digital certificate signatures; search for and verify existing signatures via AI agents.</Description>
+    <PackageTags>groupdocs;signature;mcp;model-context-protocol;mcp-server;dotnet-tool;ai;document-signing;digital-signature;qr-code;barcode</PackageTags>
+    <PackageIcon>images\icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+    <!-- Package as a .NET tool so the nupkg gets the required tools/ layout
+         for `dnx` / `dotnet tool install` invocation. -->
+    <PackAsTool>true</PackAsTool>
+    <!-- Mark as MCP server for NuGet.org discovery (packagetype=McpServer filter).
+         NOTE: correct MSBuild property is singular <PackageType>; the plural form is ignored. -->
+    <PackageType>McpServer</PackageType>
+    <!-- CLI tool name for dnx / dotnet tool install invocation -->
+    <ToolCommandName>groupdocs-signature-mcp</ToolCommandName>
+  </PropertyGroup>
+
+  <!-- Strip native debug symbols from the published tools/ output BEFORE pack
+       collects it. Keeps the nupkg under NuGet.org's 250 MB hard limit (HTTP 413
+       on push otherwise). Managed-code PDBs are preserved; only
+       runtimes/<rid>/native/*.pdb is removed. <CopyDebugSymbolFilesFromPackages>
+       false</...> does NOT cover this — runtime-asset PDBs travel via a separate
+       publish path that property doesn't intercept. Defense in depth, no-op when
+       no native PDBs are present. -->
+  <Target Name="StripNativeRuntimePdbs" AfterTargets="Publish">
+    <ItemGroup>
+      <_NativeRuntimePdbs Include="$(PublishDir)runtimes/**/*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_NativeRuntimePdbs)" />
+    <Message
+      Text="StripNativeRuntimePdbs: removed @(_NativeRuntimePdbs->Count()) native PDB file(s) from publish output to keep the nupkg under NuGet.org's 250 MB limit."
+      Importance="high"
+      Condition="@(_NativeRuntimePdbs->Count()) > 0" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+    <!-- server.json — read by NuGet.org to generate mcp.json snippets on the package page -->
+    <None Include=".mcp\server.json" Pack="true" PackagePath=".mcp/server.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core infrastructure — NuGet packages from groupdocs-mcp-core -->
+    <PackageReference Include="GroupDocs.Mcp.Core" Version="$(GroupDocsMcpCore)" />
+    <PackageReference Include="GroupDocs.Mcp.Local.Storage" Version="$(GroupDocsMcpCore)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GroupDocs.Signature" Version="$(GroupDocsSignature)" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsHosting)" />
+    <PackageReference Include="ModelContextProtocol" Version="$(ModelContextProtocol)" />
+    <!-- Override GroupDocs.Signature's transitive System.Security.Cryptography.Pkcs 7.0.0
+         which carries CVE GHSA-555c-2p6r-68mm (high severity). The .NET 9+ packages
+         contain the fix. Re-evaluate when GroupDocs.Signature updates the transitive. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GroupDocs.Signature renders signature glyphs (text, QR code, barcode) onto
+         document pages via System.Drawing.Common. On non-Windows that throws
+         PlatformNotSupportedException unless this flag is set. Pair with libgdiplus
+         + libfontconfig1 + ttf-mscorefonts-installer in docker/Dockerfile. -->
+    <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+  </ItemGroup>
+
+</Project>

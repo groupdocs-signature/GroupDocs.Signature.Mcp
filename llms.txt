@@ -1,0 +1,47 @@
+# GroupDocs.Signature MCP Server
+
+MCP server for GroupDocs.Signature — sign, search, and verify document signatures via AI agents.
+
+## Install
+
+- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Signature.Mcp@26.5.0 --yes`
+- As a global dotnet tool: `dotnet tool install -g GroupDocs.Signature.Mcp` then run `groupdocs-signature-mcp`
+- As a Docker container: `docker run --rm -i -v $(pwd)/documents:/data ghcr.io/groupdocs-signature/signature-net-mcp:latest`
+- Native prerequisite for native (dnx / global tool) runs on Linux and macOS: install libgdiplus and MS core fonts — `sudo apt-get install -y libgdiplus libfontconfig1 ttf-mscorefonts-installer` on Linux, `brew install mono-libgdiplus` on macOS. Not needed on Windows (GDI+ built in) or in Docker (bundled in the image).
+
+## MCP tools
+
+- Sign — sign a document with a text, QR code, barcode, or digital certificate signature; saves the signed file as `<name>_signed.<ext>`
+- Verify — verify signatures (text / QR / barcode / digital / all) and return validity report as JSON
+- SearchTextSignatures — find embedded text signatures with optional substring filter
+- SearchBarcodes — find barcode signatures (Code39, Code128, EAN, etc.) with optional decoded-text filter; can return inline barcode images
+- SearchQrCodes — find QR code signatures with optional decoded-text filter; can return inline QR images
+- SearchDigitalSignatures — find digital certificate signatures and return signer, issuer, serial number, validity
+- SearchImageSignatures — find embedded image signatures (logos, stamps, picture overlays) and return them as base64 PNGs
+- GetDocumentInfo — return file type, page count, size, and per-page dimensions as JSON (read-only)
+
+## Supported formats
+
+PDF, DOCX, XLSX, PPTX, JPEG, PNG, TIFF, and 30+ other document and image formats supported by GroupDocs.Signature.
+
+## Environment variables
+
+- GROUPDOCS_MCP_STORAGE_PATH — base folder for input + output (defaults to current working directory)
+- GROUPDOCS_MCP_OUTPUT_PATH — optional, routes output files to a separate folder
+- GROUPDOCS_LICENSE_PATH — path to GroupDocs.Total.lic, omit for evaluation mode
+
+## Key links
+
+- NuGet: https://www.nuget.org/packages/GroupDocs.Signature.Mcp
+- Repository: https://github.com/groupdocs-signature/GroupDocs.Signature.Mcp
+- Docker: ghcr.io/groupdocs-signature/signature-net-mcp and docker.io/groupdocs/signature-net-mcp
+- MCP Registry: io.github.groupdocs-signature/groupdocs-signature-mcp
+- License: MIT
+
+## Example prompts for AI agents
+
+- "Sign contract.pdf with a QR code containing 'Signed by Alice'"
+- "Verify all signatures in agreement.docx and tell me if any failed"
+- "Search invoice.pdf for QR codes — return the decoded text and the QR images"
+- "Are there any digital signatures in this report.pdf? If so, who signed it?"
+- "Add a text signature 'APPROVED' to the bottom-right of every page of policy.pdf"

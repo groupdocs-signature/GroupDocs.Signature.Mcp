@@ -1,0 +1,57 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "description": "MCP server for GroupDocs.Signature — sign, search and verify document signatures via AI agents.",
+  "name": "io.github.groupdocs-signature/groupdocs-signature-mcp",
+  "version": "26.5.0",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org/v3/index.json",
+      "identifier": "GroupDocs.Signature.Mcp",
+      "version": "26.5.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [],
+      "environmentVariables": [
+        {
+          "name": "GROUPDOCS_MCP_STORAGE_PATH",
+          "value": "{storage_path}",
+          "variables": {
+            "storage_path": {
+              "description": "Base folder for input and output files. Defaults to the current working directory.",
+              "isRequired": false,
+              "isSecret": false
+            }
+          }
+        },
+        {
+          "name": "GROUPDOCS_MCP_OUTPUT_PATH",
+          "value": "{output_path}",
+          "variables": {
+            "output_path": {
+              "description": "Optional — separate folder for output files. Defaults to GROUPDOCS_MCP_STORAGE_PATH.",
+              "isRequired": false,
+              "isSecret": false
+            }
+          }
+        },
+        {
+          "name": "GROUPDOCS_LICENSE_PATH",
+          "value": "{license_path}",
+          "variables": {
+            "license_path": {
+              "description": "Path to the GroupDocs.Total.lic license file. Omit to run in evaluation mode.",
+              "isRequired": false,
+              "isSecret": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/groupdocs-signature/GroupDocs.Signature.Mcp",
+    "source": "github"
+  }
+}
