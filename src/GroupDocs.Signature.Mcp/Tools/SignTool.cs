@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
 using GroupDocs.Signature.Domain;
@@ -94,7 +93,7 @@ public static class SignTool
             // Surface the underlying engine exception instead of letting it bubble
             // to MCP's generic "An error occurred invoking 'sign'." wrapper.
             // Pattern per Pitfall #18.
-            return FormatException(ex, resolved.FileName, type);
+            return ToolError.Format("Signing", resolved.FileName, ex, $" (type: '{type}')");
         }
         finally
         {
@@ -102,16 +101,5 @@ public static class SignTool
             if (File.Exists(tempOutput)) File.Delete(tempOutput);
             if (tempCert != null && File.Exists(tempCert)) File.Delete(tempCert);
         }
-    }
-
-    private static string FormatException(Exception ex, string fileName, string type)
-    {
-        var sb = new StringBuilder();
-        sb.Append($"Signing failed for '{fileName}' (type: '{type}'): ");
-        sb.Append($"{ex.GetType().FullName}: {ex.Message}");
-        var inner = ex.InnerException;
-        for (int depth = 0; inner != null && depth < 5; depth++, inner = inner.InnerException)
-            sb.Append($" | inner({depth}): {inner.GetType().FullName}: {inner.Message}");
-        return sb.ToString();
     }
 }
