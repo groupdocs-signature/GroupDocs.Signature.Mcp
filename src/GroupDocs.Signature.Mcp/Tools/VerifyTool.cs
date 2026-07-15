@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text;
 using System.Text.Json;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
@@ -57,7 +56,7 @@ public static class VerifyTool
         catch (Exception ex)
         {
             // Pitfall #18 — surface engine exceptions descriptively.
-            return FormatException(ex, resolved.FileName, type);
+            return ToolError.Format("Verification", resolved.FileName, ex, $" (type: '{type}')");
         }
         finally
         {
@@ -75,15 +74,4 @@ public static class VerifyTool
                       new BarcodeVerifyOptions { AllPages = true }, new DigitalVerifyOptions()],
         _ => throw new ArgumentException($"Unknown type '{type}'. Supported: text, qrcode, barcode, digital, all.")
     };
-
-    private static string FormatException(Exception ex, string fileName, string type)
-    {
-        var sb = new StringBuilder();
-        sb.Append($"Verification failed for '{fileName}' (type: '{type}'): ");
-        sb.Append($"{ex.GetType().FullName}: {ex.Message}");
-        var inner = ex.InnerException;
-        for (int depth = 0; inner != null && depth < 5; depth++, inner = inner.InnerException)
-            sb.Append($" | inner({depth}): {inner.GetType().FullName}: {inner.Message}");
-        return sb.ToString();
-    }
 }

@@ -61,6 +61,15 @@
          which carries CVE GHSA-555c-2p6r-68mm (high severity). The .NET 9+ packages
          contain the fix. Re-evaluate when GroupDocs.Signature updates the transitive. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.0" />
+    <!-- The 26.6.0 engine (GroupDocs.Signature.Net80) pulls two transitively-vulnerable
+         packages flagged by NuGet audit (NU1903); both are overridden to their patched
+         servicing releases. Re-evaluate when the engine updates its transitives.
+         - Microsoft.Bcl.Memory 9.0.4 (via Microsoft.Extensions.DataIngestion preview) —
+           GHSA-73j8-2gch-69rq, patched in 9.0.14.
+         - Microsoft.NETCore.Jit 1.0.2 (via Microsoft.NETCore.Portable.Compatibility) —
+           GHSA-xcvr-qv8h-m7xw, patched in 1.0.12. -->
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.18" />
+    <PackageReference Include="Microsoft.NETCore.Jit" Version="1.0.18" />
   </ItemGroup>
 
   <ItemGroup>
