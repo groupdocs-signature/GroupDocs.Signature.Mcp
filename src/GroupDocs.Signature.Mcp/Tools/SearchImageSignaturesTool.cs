@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text;
 using System.Text.Json;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
@@ -76,22 +75,11 @@ public static class SearchImageSignaturesTool
         }
         catch (Exception ex)
         {
-            return FormatException(ex, resolved.FileName);
+            return ToolError.Format("Image signature search", resolved.FileName, ex);
         }
         finally
         {
             if (File.Exists(tempInput)) File.Delete(tempInput);
         }
-    }
-
-    private static string FormatException(Exception ex, string fileName)
-    {
-        var sb = new StringBuilder();
-        sb.Append($"Image signature search failed for '{fileName}': ");
-        sb.Append($"{ex.GetType().FullName}: {ex.Message}");
-        var inner = ex.InnerException;
-        for (int depth = 0; inner != null && depth < 5; depth++, inner = inner.InnerException)
-            sb.Append($" | inner({depth}): {inner.GetType().FullName}: {inner.Message}");
-        return sb.ToString();
     }
 }
