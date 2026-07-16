@@ -17,7 +17,7 @@ Pulls the latest stable release on every invocation. To pin to a specific
 version (recommended for shared configs and CI), append `@<version>`:
 
 ```bash
-dnx GroupDocs.Signature.Mcp@26.5.0 --yes
+dnx GroupDocs.Signature.Mcp@26.7.0 --yes
 ```
 
 **Or install as a global dotnet tool:**
@@ -100,7 +100,7 @@ the tool response. The simplest zero-setup option on Linux/macOS is the
 ```
 
 > To pin to a specific version, replace `"GroupDocs.Signature.Mcp"` with
-> `"GroupDocs.Signature.Mcp@26.5.0"` in `args`. Pinning is recommended for
+> `"GroupDocs.Signature.Mcp@26.7.0"` in `args`. Pinning is recommended for
 > shared / committed configs to avoid surprise upgrades.
 
 ## Usage with VS Code / GitHub Copilot
@@ -134,7 +134,7 @@ Alternatively, add manually to `.vscode/mcp.json`:
 ```
 
 > Same pinning rule as above — swap `"GroupDocs.Signature.Mcp"` for
-> `"GroupDocs.Signature.Mcp@26.5.0"` to lock to a specific release.
+> `"GroupDocs.Signature.Mcp@26.7.0"` to lock to a specific release.
 
 ## Usage with Docker Compose
 
