@@ -4,7 +4,7 @@ MCP server for GroupDocs.Signature — sign, search, and verify document signatu
 
 ## Install
 
-- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Signature.Mcp@26.7.0 --yes`
+- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Signature.Mcp@26.7.1 --yes`
 - As a global dotnet tool: `dotnet tool install -g GroupDocs.Signature.Mcp` then run `groupdocs-signature-mcp`
 - As a Docker container: `docker run --rm -i -v $(pwd)/documents:/data ghcr.io/groupdocs-signature/signature-net-mcp:latest`
 - Native prerequisite for native (dnx / global tool) runs on Linux and macOS: install libgdiplus and MS core fonts — `sudo apt-get install -y libgdiplus libfontconfig1 ttf-mscorefonts-installer` on Linux, `brew install mono-libgdiplus` on macOS. Not needed on Windows (GDI+ built in) or in Docker (bundled in the image).
@@ -29,6 +29,10 @@ PDF, DOCX, XLSX, PPTX, JPEG, PNG, TIFF, and 30+ other document and image formats
 - GROUPDOCS_MCP_STORAGE_PATH — base folder for input + output (defaults to current working directory)
 - GROUPDOCS_MCP_OUTPUT_PATH — optional, routes output files to a separate folder
 - GROUPDOCS_LICENSE_PATH — path to GroupDocs.Total.lic, omit for evaluation mode
+
+## Licensing
+
+The MCP server is MIT; the underlying GroupDocs.Signature engine requires a license for production use. Evaluation mode (no license): Operations run with evaluation limits, and output may carry evaluation notices. A single server process can open at most 15 documents; further calls fail with an evaluation-cap error until the server restarts. Free 30-day temporary license: https://purchase.groupdocs.com/temporary-license/ — purchase: https://purchase.groupdocs.com/pricing/signature/net
 
 ## Key links
 

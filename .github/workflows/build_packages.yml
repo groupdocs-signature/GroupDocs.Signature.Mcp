@@ -9,6 +9,8 @@ on:
       - 'src/Directory.Build.props'
       - 'build/**'
       - 'build.ps1'
+      - 'install/**'
+      - 'README.md'
   pull_request:
     branches: [master, main]
   workflow_dispatch:
@@ -27,6 +29,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+
+      # Drift guard: install/generated/ and the README install-buttons block are
+      # derived from install/config.json (+ the version in build/dependencies.props)
+      # by install/generate-install-links.ps1. Fail if they are out of sync so
+      # snippets, deeplinks, and buttons can never diverge from the canonical config.
+      - name: Verify install snippets are up to date
+        shell: pwsh
+        run: ./install/generate-install-links.ps1 -Check
 
       - name: Build project
         run: dotnet build ./src/GroupDocs.Signature.Mcp.sln --configuration Release

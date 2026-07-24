@@ -1,0 +1,29 @@
+{
+  "$comment": "Canonical MCP install config - the SINGLE source all generated install snippets, deeplinks, and README install blocks derive from. Edit this file, then run install/generate-install-links.ps1 to regenerate install/generated/ and the README install-buttons block. CI fails if they drift. The package VERSION is intentionally absent here - it is read from build/dependencies.props (<GroupDocsSignatureMcp>) at generation time so there is exactly one version source of truth.",
+  "name": "groupdocs-signature",
+  "displayName": "GroupDocs Signature",
+  "packageId": "GroupDocs.Signature.Mcp",
+  "toolCommand": "groupdocs-signature-mcp",
+  "registryName": "io.github.groupdocs-signature/groupdocs-signature-mcp",
+  "ghcrImage": "ghcr.io/groupdocs-signature/signature-net-mcp",
+  "dockerHubImage": "groupdocs/signature-net-mcp",
+  "testsRepo": "groupdocs-signature/GroupDocs.Signature.Mcp.Tests",
+  "command": "dnx",
+  "args": ["GroupDocs.Signature.Mcp", "--yes"],
+  "env": {
+    "GROUPDOCS_MCP_STORAGE_PATH": "${input:storage_path}",
+    "GROUPDOCS_LICENSE_PATH": "${input:license_path}"
+  },
+  "inputs": [
+    {
+      "id": "storage_path",
+      "description": "Base folder for input and output files",
+      "required": true
+    },
+    {
+      "id": "license_path",
+      "description": "Path to GroupDocs license file (optional - evaluation mode if empty)",
+      "required": false
+    }
+  ]
+}

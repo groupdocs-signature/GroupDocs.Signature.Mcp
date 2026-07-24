@@ -9,6 +9,14 @@
     }
   ],
   "servers": {
+    "groupdocs-signature": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": ["GroupDocs.Signature.Mcp", "--yes"],
+      "env": {
+        "GROUPDOCS_MCP_STORAGE_PATH": "${input:storage_path}"
+      }
+    },
     "groupdocs-signature-dev": {
       "type": "stdio",
       "command": "dotnet",

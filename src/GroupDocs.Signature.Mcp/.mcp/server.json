@@ -2,13 +2,13 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "description": "MCP server for GroupDocs.Signature — sign, search and verify document signatures via AI agents.",
   "name": "io.github.groupdocs-signature/groupdocs-signature-mcp",
-  "version": "26.7.0",
+  "version": "26.7.1",
   "packages": [
     {
       "registryType": "nuget",
       "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "GroupDocs.Signature.Mcp",
-      "version": "26.7.0",
+      "version": "26.7.1",
       "transport": {
         "type": "stdio"
       },
