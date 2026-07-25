@@ -112,6 +112,8 @@ $badgeVsCode   = "[![Install in VS Code](https://img.shields.io/badge/VS_Code-In
 $badgeInsiders = "[![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install-24bfa5)](${vscodeInsidersUrl})"
 $badgeCursor   = "[![Add to Cursor](https://img.shields.io/badge/Cursor-Add_MCP-111111)](${cursorUrl})"
 
+$pinNoteCodex = "Pin a version by replacing ``$pkg`` with ``$pkg@$version``."
+
 # ---------------------------------------------------------------- generated files
 $files = [ordered]@{}
 
@@ -159,6 +161,42 @@ Remove ``GROUPDOCS_LICENSE_PATH`` to run in evaluation mode. Pin a version by
 replacing ``$pkg`` with ``$pkg@$version``.
 "@
 
+$files['codex.md'] = @"
+# Codex CLI (OpenAI)
+
+``````bash
+codex mcp add $name -- $($cfg.command) $($cfg.args -join ' ')
+``````
+
+Or add to ``~/.codex/config.toml``:
+
+``````toml
+[mcp_servers.$name]
+command = "$($cfg.command)"
+args = $argsJson
+
+[mcp_servers.$name.env]
+GROUPDOCS_MCP_STORAGE_PATH = "/path/to/documents"
+# GROUPDOCS_LICENSE_PATH = "/path/to/GroupDocs.Total.lic"   # omit for evaluation mode
+``````
+
+$pinNoteCodex
+"@
+
+$files['windsurf.md'] = @"
+# Windsurf
+
+Windsurf has no MCP CLI - add the server via its config file:
+
+1. Open Windsurf -> Settings -> Cascade -> Manage MCP servers -> View raw config
+   (or edit ``~/.codeium/windsurf/mcp_config.json`` directly).
+2. Merge in the contents of ``windsurf.json`` from this folder.
+3. Refresh the MCP server list.
+
+Remove ``GROUPDOCS_LICENSE_PATH`` from the pasted config to run in evaluation mode.
+$pinNoteCodex
+"@
+
 $files['install-links.md'] = @"
 # Generated install links - $($cfg.displayName) MCP (source: install/config.json, version $version)
 
@@ -183,8 +221,10 @@ $badgeVsCode $badgeInsiders $badgeCursor
 
 > One-click installs write a minimal config (storage defaults to the client's working
 > directory). To use a specific documents folder or a license, add the
-> GROUPDOCS_MCP_STORAGE_PATH / GROUPDOCS_LICENSE_PATH env vars to the written entry -
-> ready-made examples live in [``install/generated/``](install/generated/).
+> GROUPDOCS_MCP_STORAGE_PATH / GROUPDOCS_LICENSE_PATH env vars to the written entry.
+>
+> **More clients** - ready-made configs for Claude Code, Codex CLI, Visual Studio 2022,
+> Cursor, Windsurf, Cline, and JetBrains Rider live in [``install/generated/``](install/generated/).
 <!-- install-buttons:end -->
 "@
 
