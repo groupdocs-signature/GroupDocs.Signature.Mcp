@@ -6,7 +6,8 @@
       "args": ["GroupDocs.Signature.Mcp", "--yes"],
       "env": {
         "GROUPDOCS_MCP_STORAGE_PATH": "/path/to/documents",
-        "GROUPDOCS_LICENSE_PATH": "/path/to/GroupDocs.Total.lic"
+        "GROUPDOCS_MCP_OUTPUT_PATH": "/path/to/documents",
+        "GROUPDOCS_LICENSE_PATH": ""
       }
     }
   }

@@ -20,6 +20,7 @@
       "args": ["GroupDocs.Signature.Mcp", "--yes"],
       "env": {
         "GROUPDOCS_MCP_STORAGE_PATH": "${input:storage_path}",
+        "GROUPDOCS_MCP_OUTPUT_PATH": "${input:storage_path}",
         "GROUPDOCS_LICENSE_PATH": "${input:license_path}"
       }
     }
