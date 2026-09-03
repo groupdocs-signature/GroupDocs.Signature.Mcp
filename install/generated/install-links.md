@@ -1,4 +1,4 @@
-# Generated install links - GroupDocs Signature MCP (source: install/config.json, version 26.7.2)
+# Generated install links - GroupDocs Signature MCP (source: install/config.json, version 26.9.0)
 
 Do not edit by hand; run `pwsh install/generate-install-links.ps1`.
 
