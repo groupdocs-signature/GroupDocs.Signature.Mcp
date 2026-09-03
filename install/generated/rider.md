@@ -17,4 +17,4 @@ Settings -> Tools -> AI Assistant -> Model Context Protocol (MCP) -> Add. Choose
 ```
 
 An empty `GROUPDOCS_LICENSE_PATH` runs in evaluation mode. Pin a version by
-replacing `GroupDocs.Signature.Mcp` with `GroupDocs.Signature.Mcp@26.7.2`.
+replacing `GroupDocs.Signature.Mcp` with `GroupDocs.Signature.Mcp@26.9.0`.
