@@ -4,7 +4,7 @@ MCP server for GroupDocs.Signature — sign, search, and verify document signatu
 
 ## Install
 
-- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Signature.Mcp@26.7.2 --yes`
+- With dnx (.NET 10 SDK, no install step): `dnx GroupDocs.Signature.Mcp@26.9.0 --yes`
 - As a global dotnet tool: `dotnet tool install -g GroupDocs.Signature.Mcp` then run `groupdocs-signature-mcp`
 - As a Docker container: `docker run --rm -i -v $(pwd)/documents:/data ghcr.io/groupdocs-signature/signature-net-mcp:latest`
 - Native prerequisite for native (dnx / global tool) runs on Linux and macOS: install libgdiplus and MS core fonts — `sudo apt-get install -y libgdiplus libfontconfig1 ttf-mscorefonts-installer` on Linux, `brew install mono-libgdiplus` on macOS. Not needed on Windows (GDI+ built in) or in Docker (bundled in the image).
