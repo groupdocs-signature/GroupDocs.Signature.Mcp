@@ -38,7 +38,7 @@ Pulls the latest stable release on every invocation. To pin to a specific
 version (recommended for shared configs and CI), append `@<version>`:
 
 ```bash
-dnx GroupDocs.Signature.Mcp@26.7.2 --yes
+dnx GroupDocs.Signature.Mcp@26.9.0 --yes
 ```
 
 **Or install as a global dotnet tool:**
@@ -103,7 +103,46 @@ for production use.** Without one the server runs in **evaluation mode**:
 - Operations run with evaluation limits, and output may carry evaluation notices.
 - A single server process can open at most **15 documents**; further calls fail with an evaluation-cap error until the server restarts.
 
-To lift the limits, point `GROUPDOCS_LICENSE_PATH` at your `GroupDocs.Total.lic`:
+There are two ways to license the server.
+
+**License file** — point `GROUPDOCS_LICENSE_PATH` at your `GroupDocs.Total.lic`. Works offline.
+
+**Metered (pay-per-use)** — set both `GROUPDOCS_METERED_PUBLIC_KEY` and
+`GROUPDOCS_METERED_PRIVATE_KEY`. You are billed for what you actually process, which suits AI
+agents well because their usage is bursty and hard to predict up front. If both a metered key pair
+and a license file are configured, **metered wins** and the file is ignored.
+
+> **Metered mode needs outbound connectivity.** Usage is reported to GroupDocs servers, so
+> air-gapped or firewalled deployments must allow that egress — or use a license file instead.
+
+Call the **`get_license_status`** tool at any time to see which mode is active, and — under
+metered — the consumed quantity and remaining credit.
+
+### Keeping the private key out of your config
+
+The metered private key is a secret. MCP client configs are plain files on disk, and a
+project-scoped `.mcp.json` is committed by convention, so prefer, in order:
+
+1. **Set the variables in your OS environment and leave them out of the config entirely.** An
+   stdio MCP server inherits its client's environment, so this works in every client.
+   On macOS note that an app launched from Finder does not inherit shell exports — use
+   `launchctl setenv`, or launch the client from a terminal.
+2. **Reference them indirectly** if your client supports it (Claude Code expands `${VAR}`;
+   VS Code uses `${env:VAR}` and `${input:...}`).
+3. **A literal value in a user-scoped config** (for example `~/.claude.json`) is acceptable for a
+   single developer.
+4. **Never** commit a literal key in a project-scoped `.mcp.json`.
+
+For Docker, forward the values without writing them into any file:
+
+```bash
+docker run --rm -i \
+  -e GROUPDOCS_METERED_PUBLIC_KEY -e GROUPDOCS_METERED_PRIVATE_KEY \
+  -v /path/to/documents:/data \
+  ghcr.io/groupdocs-signature/signature-net-mcp:latest
+```
+
+To lift the limits with a license file:
 
 - [Get a free 30-day temporary license](https://purchase.groupdocs.com/temporary-license/)
 - [Purchase a license](https://purchase.groupdocs.com/pricing/signature/net) | [Product page](https://products.groupdocs.com/signature/net/)
@@ -115,6 +154,8 @@ To lift the limits, point `GROUPDOCS_LICENSE_PATH` at your `GroupDocs.Total.lic`
 | `GROUPDOCS_MCP_STORAGE_PATH` | Base folder for input and output files | current directory |
 | `GROUPDOCS_MCP_OUTPUT_PATH` | *(Optional)* separate folder for output files | `GROUPDOCS_MCP_STORAGE_PATH` |
 | `GROUPDOCS_LICENSE_PATH` | Path to GroupDocs license file | (evaluation mode) |
+| `GROUPDOCS_METERED_PUBLIC_KEY` | Metered public key. Requires the private key too; takes precedence over the license file | (unset) |
+| `GROUPDOCS_METERED_PRIVATE_KEY` | Metered private key. **Secret** - see [Licensing](#licensing) | (unset) |
 
 ## Usage with Claude Desktop
 
@@ -134,7 +175,7 @@ To lift the limits, point `GROUPDOCS_LICENSE_PATH` at your `GroupDocs.Total.lic`
 ```
 
 > To pin to a specific version, replace `"GroupDocs.Signature.Mcp"` with
-> `"GroupDocs.Signature.Mcp@26.7.2"` in `args`. Pinning is recommended for
+> `"GroupDocs.Signature.Mcp@26.9.0"` in `args`. Pinning is recommended for
 > shared / committed configs to avoid surprise upgrades.
 
 ## Usage with VS Code / GitHub Copilot
@@ -168,7 +209,7 @@ Alternatively, add manually to `.vscode/mcp.json`:
 ```
 
 > Same pinning rule as above — swap `"GroupDocs.Signature.Mcp"` for
-> `"GroupDocs.Signature.Mcp@26.7.2"` to lock to a specific release.
+> `"GroupDocs.Signature.Mcp@26.9.0"` to lock to a specific release.
 
 ## Usage with Docker Compose
 
