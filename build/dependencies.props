@@ -29,7 +29,7 @@
 
   <PropertyGroup Label="External Dependency Versions">
     <GroupDocsMcpCore>26.9.0</GroupDocsMcpCore>
-    <GroupDocsSignature>26.6.0</GroupDocsSignature>
+    <GroupDocsSignature>26.9.0</GroupDocsSignature>
     <MicrosoftExtensionsHosting>10.0.5</MicrosoftExtensionsHosting>
     <ModelContextProtocol>1.1.0</ModelContextProtocol>
     <MicrosoftSourceLinkGithub>8.0.0</MicrosoftSourceLinkGithub>
