@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.Json;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
@@ -21,6 +21,7 @@ public static class SearchTextSignaturesTool
         "Note: this searches for signature objects — to search for arbitrary text inside document content use a text-extraction tool instead. " +
         "Do NOT pre-check whether the file exists — pass the filename the user provided directly. " +
         "Returns a JSON object with `found` (count) and `signatures` (array with `page`, `text`, `implementation`, `left`, `top`, `width`, `height` per signature). " +
+        "`page` is 1-based, and `page: 0` means the signature sits outside the page body - in a header or a footer. " +
         "On failure, the response text starts with 'Text signature search failed for' followed by the underlying exception type, message, and inner-exception chain.")]
     public static async Task<string> SearchTextSignatures(
         IFileResolver resolver,

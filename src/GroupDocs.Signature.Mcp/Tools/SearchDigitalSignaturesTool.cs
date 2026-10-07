@@ -19,7 +19,10 @@ public static class SearchDigitalSignaturesTool
         "and any comments or reason attached to the signature. " +
         "Supports PDF and Office documents (DOCX, XLSX, PPTX). " +
         "Do NOT pre-check whether the file exists — pass the filename the user provided directly. " +
-        "Returns a JSON object with `found` (count), `signatures` (array with `signTime`, `isValid`, `comments`, `thumbprint`, and a nested `certificate` object) " +
+        "Returns a JSON object with `found` (count), `signatures` (array with `signTime`, `isValid`, `comments`, `thumbprint`, " +
+        "`reason`, `location`, `contact`, and a nested `certificate` object) " +
+        "`reason`, `location` and `contact` are stored in PDF only - they are always null on Word, Excel and PowerPoint documents, " +
+        "which means null there tells you nothing about whether the signer gave a reason. " +
         "and `certificateWarnings` (array, empty when nothing is wrong). " +
         "Each `certificate` also carries `isExpired` and `isNotYetValid` (its state right now) and `validWhenSigned` " +
         "(whether the signature was made inside the certificate's validity period, null when the document records no sign time). " +
@@ -68,12 +71,20 @@ public static class SearchDigitalSignaturesTool
                     if (warning != null && !certificateWarnings.Contains(warning)) certificateWarnings.Add(warning);
                 }
 
+                // Reason, location and contact live on the PDF-specific subclass, so reading only the base
+                // DigitalSignature silently dropped them. They stay null on Office formats, which have
+                // nowhere to store them.
+                var pdf = d as PdfDigitalSignature;
+
                 return new
                 {
                     signTime = d.SignTime,
                     isValid = d.IsValid,
                     comments = d.Comments,
                     thumbprint = d.Thumbprint,
+                    reason = pdf?.Reason,
+                    location = pdf?.Location,
+                    contact = pdf?.ContactInfo,
                     certificate = certificate == null ? null : new
                     {
                         subject = certificate.Subject,
