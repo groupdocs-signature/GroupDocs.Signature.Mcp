@@ -19,7 +19,9 @@ public static class VerifyTool
         "Call this tool immediately whenever the user asks to verify a signature, check if a document is signed, or validate a signature. " +
         "Do NOT pre-check whether files exist — just pass the filename the user provided. " +
         "The tool resolves files from storage and returns an error with available files if a name is not found. " +
-        "Returns a JSON object with `found` (how many signatures matched), `signatures` (one entry each, with its `type`), " +
+        "Returns a JSON object with `found` (how many signatures matched), `signatures` (one entry each, with its `type`; " +
+        "text, QR code and barcode entries carry `page`, which is 1-based, where `page: 0` means the signature sits outside " +
+        "the page body - in a header or a footer), " +
         "`isValid`, and `certificateWarnings` (array, empty when nothing is wrong). " +
         "`isValid` is true only when every digital signature passed its cryptographic check; it is null when the document has no digital " +
         "signature, because text, QR code and barcode signatures carry nothing to verify - for those, `found` is the answer. " +
@@ -103,7 +105,7 @@ public static class VerifyTool
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
                 foreach (var t in sig.Search<TextSignature>(options))
-                    entries.Add(new { type = "text", pageNumber = t.PageNumber, text = t.Text });
+                    entries.Add(new { type = "text", page = t.PageNumber, text = t.Text });
             }
 
             if (typeLower is "qrcode" or "all")
@@ -112,7 +114,7 @@ public static class VerifyTool
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
                 foreach (var q in sig.Search<QrCodeSignature>(options))
-                    entries.Add(new { type = "qrcode", pageNumber = q.PageNumber, encodeType = q.EncodeType?.TypeName, text = q.Text });
+                    entries.Add(new { type = "qrcode", page = q.PageNumber, encodeType = q.EncodeType?.TypeName, text = q.Text });
             }
 
             if (typeLower is "barcode" or "all")
@@ -121,7 +123,7 @@ public static class VerifyTool
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
                 foreach (var b in sig.Search<BarcodeSignature>(options))
-                    entries.Add(new { type = "barcode", pageNumber = b.PageNumber, encodeType = b.EncodeType?.TypeName, text = b.Text });
+                    entries.Add(new { type = "barcode", page = b.PageNumber, encodeType = b.EncodeType?.TypeName, text = b.Text });
             }
 
             var prefix = licenseManager.IsLicensed

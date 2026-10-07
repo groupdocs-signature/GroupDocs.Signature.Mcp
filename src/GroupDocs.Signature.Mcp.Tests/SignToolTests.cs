@@ -130,6 +130,39 @@ public class SignToolTests
         ThenNothingWasWritten();
     }
 
+    [Theory]
+    [InlineData("数字签名 — ok")]   // CJK + em dash
+    [InlineData("承認済み ✔")]      // CJK + heavy check mark
+    public async Task Sign_QrPayloadKnownToCorrupt_IsRefused(string payload)
+    {
+        GivenAnyResolvableFile();
+
+        var result = await SignTool.Sign(
+            _resolver.Object, _storage.Object, _licenseManager.Object, _output,
+            new FileInput { FilePath = "doc.pdf" }, type: "qrcode", text: payload);
+
+        // The engine encodes these to a QR code that scans cleanly and carries wrong data, so refusing
+        // is deliberate. Interim - delete with the guard once the encoder is fixed.
+        Assert.Contains("QR payload refused", result);
+        ThenNothingWasWritten();
+    }
+
+    [Theory]
+    [InlineData("数字签名")]             // CJK alone round-trips correctly
+    [InlineData("abc 数字签名")]         // so does CJK after Latin
+    [InlineData("plain ascii — with em dash")]      // em dash without CJK is fine
+    public async Task Sign_QrPayloadWithoutTheTrigger_IsNotRefused(string payload)
+    {
+        GivenAnyResolvableFile();
+
+        var result = await SignTool.Sign(
+            _resolver.Object, _storage.Object, _licenseManager.Object, _output,
+            new FileInput { FilePath = "doc.pdf" }, type: "qrcode", text: payload);
+
+        // It fails later on the dummy document, which is fine - what matters is that the guard let it past.
+        Assert.DoesNotContain("QR payload refused", result);
+    }
+
     private void GivenRealDocument()
     {
         var bytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "TestData", "sample.pdf"));
