@@ -50,7 +50,17 @@ public static class SignTool
             "Default false: signing with such a certificate fails and no file is written. " +
             "Usually means the certificate was issued for a later date or the machine clock is wrong. " +
             "Set true only when that certificate must be used anyway - the document IS signed, but signature validators " +
-            "report such a signature as NOT valid.")] bool allowNotYetValid = false)
+            "report such a signature as NOT valid.")] bool allowNotYetValid = false,
+        [Description(
+            "Why the document is being signed, for example 'I approve this document'. Applies to type 'digital' only, " +
+            "and is stored only in PDF - Word, Excel and PowerPoint have nowhere to keep it, so it is accepted and lost there. " +
+            "On PDF it also appears in the visible signature, which reads 'Digitally signed by ... Reason: ...'.")] string? reason = null,
+        [Description(
+            "Where the signing took place, for example 'Prague, CZ'. Applies to type 'digital' only, PDF only, " +
+            "and appears in the visible signature. See 'reason'.")] string? location = null,
+        [Description(
+            "How to reach the signer, for example an email address. Applies to type 'digital' only, PDF only, " +
+            "and appears in the visible signature. See 'reason'.")] string? contact = null)
     {
         licenseManager.SetLicense();
         using var resolved = await resolver.ResolveAsync(file);
@@ -74,6 +84,14 @@ public static class SignTool
             // qrcode/barcode, a scannable code whose payload was the word "Signed".
             if (typeLower != "digital" && string.IsNullOrWhiteSpace(text))
                 return $"A {typeLower} signature requires text. Provide the 'text' parameter.";
+
+            // INTERIM GUARD - remove together with this comment once the engine's QR encoder is fixed.
+            if (typeLower == "qrcode" && FindQrCorruptionTrigger(text!) is { } trigger)
+                return $"QR payload refused: it mixes CJK characters with '{trigger}' (U+{(int)trigger:X4}), "
+                     + "a combination the QR encoder corrupts silently - the CJK characters come back replaced by "
+                     + "unrelated Latin letters, and nothing in the signed document signals it. "
+                     + "Remove that character, or encode the CJK text without it. "
+                     + "Refusing here is deliberate: a corrupted QR code scans cleanly and gives the reader wrong data.";
 
             await using (var fs = File.Create(tempInput))
                 await resolved.Stream.CopyToAsync(fs);
@@ -114,7 +132,13 @@ public static class SignTool
                     // Passed through verbatim. Both default to false, so the engine's secure default
                     // (reject a certificate outside its validity period) is never weakened implicitly.
                     AllowExpired = allowExpired,
-                    AllowNotYetValid = allowNotYetValid
+                    AllowNotYetValid = allowNotYetValid,
+                    // PDF keeps these in the signature dictionary and renders them in the visible
+                    // signature; other formats have nowhere to store them. Null leaves the engine's
+                    // own defaults alone.
+                    Reason = reason,
+                    Location = location,
+                    Contact = contact
                 };
             }
             else
@@ -162,6 +186,37 @@ public static class SignTool
             if (tempCert != null && File.Exists(tempCert)) File.Delete(tempCert);
         }
     }
+
+    /// <summary>
+    /// INTERIM. Detects the payload shape the engine's QR encoder is known to corrupt, returning the
+    /// offending character or <c>null</c> when the payload is safe.
+    /// </summary>
+    /// <remarks>
+    /// Signing CJK text together with an em dash or a check mark produces a QR code whose CJK characters
+    /// are each replaced by their low byte - U+6570 comes back as 'p', U+5B57 as 'W' - while the characters
+    /// around them survive. The symbol scans cleanly and the wrong data looks plausible, so nothing downstream
+    /// can notice. The same payload without those characters round-trips exactly.
+    /// <para>
+    /// The trigger set is empirical, taken from reproductions on both channels, not from the encoder's source;
+    /// it will over- and under-match. It exists only until the encoder is fixed, and this whole member plus its
+    /// call site should be deleted then.
+    /// </para>
+    /// </remarks>
+    private static char? FindQrCorruptionTrigger(string payload)
+    {
+        if (!payload.Any(IsCjk)) return null;
+
+        foreach (var c in payload)
+            if (c is '—' or '✔') return c;   // em dash, heavy check mark
+
+        return null;
+    }
+
+    private static bool IsCjk(char c) =>
+        c is >= '一' and <= '鿿'       // CJK Unified Ideographs
+          or >= '㐀' and <= '䶿'       // Unified Ideographs Extension A
+          or >= '぀' and <= 'ヿ'       // Hiragana and Katakana
+          or >= '가' and <= '힯';      // Hangul syllables
 
     /// <summary>
     /// Adds the one thing the engine's font error does not say: which parameter fixes it.

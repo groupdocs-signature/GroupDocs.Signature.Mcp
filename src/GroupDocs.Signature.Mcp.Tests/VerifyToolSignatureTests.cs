@@ -79,6 +79,21 @@ public class VerifyToolSignatureTests
     }
 
     [Fact]
+    public async Task SearchDigital_ReturnsReasonLocationAndContact()
+    {
+        var signed = await SignWith(Valid(),
+            reason: "I approve this document", location: "Prague, CZ", contact: "qa@example.com");
+
+        var search = JsonDocument.Parse(Json(await SearchDigitalJson(signed))).RootElement;
+        var signature = search.GetProperty("signatures")[0];
+
+        // These live on the PDF-specific subclass; reading only the base type dropped them silently.
+        Assert.Equal("I approve this document", signature.GetProperty("reason").GetString());
+        Assert.Equal("Prague, CZ", signature.GetProperty("location").GetString());
+        Assert.Equal("qa@example.com", signature.GetProperty("contact").GetString());
+    }
+
+    [Fact]
     public async Task Verify_OnAnUnsignedDocument_ClaimsNothing()
     {
         GivenStoredFile("plain.pdf", await File.ReadAllBytesAsync(SamplePdfPath));
@@ -92,7 +107,8 @@ public class VerifyToolSignatureTests
 
     // ---- helpers ------------------------------------------------------------------------------------
 
-    private async Task<string> SignWith(byte[] pfx, bool allowExpired = false)
+    private async Task<string> SignWith(byte[] pfx, bool allowExpired = false,
+        string? reason = null, string? location = null, string? contact = null)
     {
         var pdf = await File.ReadAllBytesAsync(SamplePdfPath);
         GivenStoredFile("sample.pdf", pdf);
@@ -103,7 +119,8 @@ public class VerifyToolSignatureTests
             new FileInput { FilePath = "sample.pdf" }, type: "digital",
             certificate: new FileInput { FilePath = "cert.pfx" },
             certificatePassword: CertificatePassword,
-            allowExpired: allowExpired);
+            allowExpired: allowExpired,
+            reason: reason, location: location, contact: contact);
 
         var produced = _written.Keys.FirstOrDefault(k => k.Contains("_signed"));
         Assert.NotNull(produced);
