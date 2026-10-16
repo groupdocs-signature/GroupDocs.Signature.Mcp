@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.Json;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
@@ -19,6 +19,7 @@ public static class SearchImageSignaturesTool
         "Supports PDF, DOCX, XLSX, PPTX, and 30+ more document formats. " +
         "Do NOT pre-check whether the file exists — pass the filename the user provided directly. " +
         "Returns a JSON object with `found` (count) and `signatures` (array with `index`, `page`, position, dimensions, `sizeBytes`, and `imageBase64`). " +
+        "`page` is 1-based, and `page: 0` means the signature sits outside the page body - in a header or a footer. " +
         "On failure, the response text starts with 'Image signature search failed for' followed by the underlying exception type, message, and inner-exception chain.")]
     public static async Task<string> SearchImageSignatures(
         IFileResolver resolver,

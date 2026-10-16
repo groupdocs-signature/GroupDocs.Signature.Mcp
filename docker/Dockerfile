@@ -20,11 +20,18 @@ FROM base AS final
 # the EULA and fc-cache to refresh the font cache so freshly-installed faces are
 # discoverable. Pair this with <RuntimeHostConfigurationOption Include=
 # "System.Drawing.EnableUnixSupport" Value="true" /> in the csproj.
+# fonts-noto-cjk adds Chinese, Japanese and Korean coverage, which the Microsoft core fonts do not have.
+# Without it, signing CJK text fails outright. Note this is only half of what CJK needs: the engine looks
+# up fonts by family name and does not consult fontconfig, so it cannot find a Debian font under a Windows
+# name like "SimSun" - a fontconfig alias does not help either (verified). Callers must name an installed
+# family through the sign tool's `font` parameter, e.g. "Noto Sans CJK SC". The package costs roughly
+# 170 MB of image size; swap it for a narrower one only if partial CJK coverage is acceptable, bearing in
+# mind that renders some characters and boxes others instead of failing cleanly.
 USER root
 RUN apt-get update \
  && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
  && apt-get install -y --no-install-recommends \
-      libgdiplus libfontconfig1 ttf-mscorefonts-installer \
+      libgdiplus libfontconfig1 ttf-mscorefonts-installer fonts-noto-cjk \
  && fc-cache -f -v > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.Json;
 using GroupDocs.Mcp.Core;
 using GroupDocs.Mcp.Core.Licensing;
@@ -20,6 +20,7 @@ public static class SearchQrCodesTool
         "Optionally filters results to QR codes whose decoded text contains a specific string. " +
         "Do NOT pre-check whether the file exists — pass the filename the user provided directly. " +
         "Returns a JSON object with `found` (count) and `signatures` (array with `page`, `type`, `text`, position, dimensions, and optional `imageBase64`). " +
+        "`page` is 1-based, and `page: 0` means the signature sits outside the page body - in a header or a footer. " +
         "On failure, the response text starts with 'QR code search failed for' followed by the underlying exception type, message, and inner-exception chain.")]
     public static async Task<string> SearchQrCodes(
         IFileResolver resolver,

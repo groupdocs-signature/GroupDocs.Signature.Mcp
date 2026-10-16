@@ -26,4 +26,10 @@
     <ProjectReference Include="..\GroupDocs.Signature.Mcp\GroupDocs.Signature.Mcp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Documents the certificate-validity tests sign. Test certificates are generated in-process
+         (see SignToolCertificateTests) so nothing secret is committed and nothing expires. -->
+    <Content Include="TestData\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
