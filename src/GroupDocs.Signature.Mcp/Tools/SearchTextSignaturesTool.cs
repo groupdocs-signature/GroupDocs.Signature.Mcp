@@ -22,12 +22,17 @@ public static class SearchTextSignaturesTool
         "Do NOT pre-check whether the file exists — pass the filename the user provided directly. " +
         "Returns a JSON object with `found` (count) and `signatures` (array with `page`, `text`, `implementation`, `left`, `top`, `width`, `height` per signature). " +
         "`page` is 1-based, and `page: 0` means the signature sits outside the page body - in a header or a footer. " +
+        "Only applied signatures are returned; document body text is excluded unless includeDocumentContent is set. " +
         "On failure, the response text starts with 'Text signature search failed for' followed by the underlying exception type, message, and inner-exception chain.")]
     public static async Task<string> SearchTextSignatures(
         IFileResolver resolver,
         ILicenseManager licenseManager,
         FileInput file,
         [Description("Return only text signatures whose content contains this string. Omit to return all text signatures.")] string? text = null,
+        [Description(
+            "Also return text that is part of the document body rather than a signature. Default false. " +
+            "Office formats keep ordinary text in objects the engine reports alongside real signatures, so leaving this " +
+            "false is what makes the result a list of signatures.")] bool includeDocumentContent = false,
         [Description("Password for protected documents.")] string? password = null)
     {
         licenseManager.SetLicense();
@@ -44,26 +49,23 @@ public static class SearchTextSignaturesTool
                 ? new Signature(tempInput, loadOptions)
                 : new Signature(tempInput);
 
-            var options = new TextSearchOptions { AllPages = true };
+            // SkipExternal keeps only what the engine marks as an applied signature. Without it a signed
+            // PPTX also returns its body text as a "signature". Note IsSignature is true for both, so it
+            // cannot be used to filter after the fact.
+            var options = new TextSearchOptions { AllPages = true, SkipExternal = !includeDocumentContent };
             if (!string.IsNullOrEmpty(text))
             {
                 options.Text = text;
                 options.MatchType = TextMatchType.Contains;
             }
 
-            var signatures = sig.Search<TextSignature>(options);
+            var searchResult = ArchiveAwareSearch.Run(sig, options);
 
             var prefix = licenseManager.IsLicensed
                 ? string.Empty
                 : "[Evaluation mode] Results may be limited.\n\n";
 
-            if (signatures.Count == 0)
-            {
-                var hint = text != null ? $" containing '{text}'" : string.Empty;
-                return $"{prefix}No text signatures{hint} found in '{resolved.FileName}'.";
-            }
-
-            var results = signatures.Select(t => new
+            static object Project(TextSignature t) => new
             {
                 page = t.PageNumber,
                 text = t.Text,
@@ -72,10 +74,37 @@ public static class SearchTextSignaturesTool
                 top = t.Top,
                 width = t.Width,
                 height = t.Height
-            }).ToArray();
+            };
+
+            // An archive keeps its signatures one level down, per contained document.
+            var documents = ArchiveAwareSearch.Documents<TextSignature>(searchResult);
+            if (documents.Count > 0)
+            {
+                var perDocument = documents.Select(d => new
+                {
+                    fileName = d.FileName,
+                    found = d.Items.Count,
+                    signatures = d.Items.Select(Project).ToArray()
+                }).ToArray();
+
+                return prefix + JsonSerializer.Serialize(new
+                {
+                    found = perDocument.Sum(d => d.found),
+                    archive = true,
+                    documents = perDocument
+                }, JsonOptions);
+            }
+
+            var signatures = ArchiveAwareSearch.Signatures<TextSignature>(searchResult);
+            if (signatures.Count == 0)
+            {
+                var hint = text != null ? $" containing '{text}'" : string.Empty;
+                return $"{prefix}No text signatures{hint} found in '{resolved.FileName}'.";
+            }
 
             // Pitfall #16: return raw JSON.
-            return prefix + JsonSerializer.Serialize(new { found = signatures.Count, signatures = results }, JsonOptions);
+            return prefix + JsonSerializer.Serialize(
+                new { found = signatures.Count, signatures = signatures.Select(Project).ToArray() }, JsonOptions);
         }
         catch (Exception ex)
         {

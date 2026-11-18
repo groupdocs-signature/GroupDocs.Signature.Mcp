@@ -65,9 +65,25 @@ public static class VerifyTool
             var certificateWarnings = new List<string>();
             bool? digitalValid = null;
 
+            // Collects from an ordinary document or from each document inside an archive. Without the
+            // archive branch, verifying a signed ZIP answered "found 0".
+            void Collect<T>(SearchOptions options, Func<T, string?, object> project) where T : BaseSignature
+            {
+                var searchResult = ArchiveAwareSearch.Run(sig, options);
+                var documents = ArchiveAwareSearch.Documents<T>(searchResult);
+
+                if (documents.Count > 0)
+                    foreach (var (fileName, items) in documents)
+                        foreach (var item in items)
+                            entries.Add(project(item, fileName));
+                else
+                    foreach (var item in ArchiveAwareSearch.Signatures<T>(searchResult))
+                        entries.Add(project(item, null));
+            }
+
             if (typeLower is "digital" or "all")
             {
-                foreach (var d in sig.Search<DigitalSignature>(SignatureType.Digital))
+                Collect<DigitalSignature>(new DigitalSearchOptions(), (d, document) =>
                 {
                     digitalValid = (digitalValid ?? true) && d.IsValid;
 
@@ -78,9 +94,10 @@ public static class VerifyTool
                         if (warning != null && !certificateWarnings.Contains(warning)) certificateWarnings.Add(warning);
                     }
 
-                    entries.Add(new
+                    return new
                     {
                         type = "digital",
+                        document,
                         isValid = d.IsValid,
                         signTime = d.SignTime,
                         comments = d.Comments,
@@ -95,17 +112,20 @@ public static class VerifyTool
                             isNotYetValid = CertificateValidity.IsNotYetValid(certificate, utcNow),
                             validWhenSigned = CertificateValidity.WasValidWhenSigned(certificate, d.SignTime)
                         }
-                    });
-                }
+                    };
+                });
             }
 
             if (typeLower is "text" or "all")
             {
-                var options = new TextSearchOptions { AllPages = true };
+                // SkipExternal here only. On Office formats a text search otherwise returns document body
+                // text as a signature. It is deliberately not applied to QR codes and barcodes, where
+                // finding a code that was already in the document is a normal thing to ask for.
+                var options = new TextSearchOptions { AllPages = true, SkipExternal = true };
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
-                foreach (var t in sig.Search<TextSignature>(options))
-                    entries.Add(new { type = "text", page = t.PageNumber, text = t.Text });
+                Collect<TextSignature>(options, (t, document) =>
+                    new { type = "text", document, page = t.PageNumber, text = t.Text });
             }
 
             if (typeLower is "qrcode" or "all")
@@ -113,8 +133,8 @@ public static class VerifyTool
                 var options = new QrCodeSearchOptions { AllPages = true };
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
-                foreach (var q in sig.Search<QrCodeSignature>(options))
-                    entries.Add(new { type = "qrcode", page = q.PageNumber, encodeType = q.EncodeType?.TypeName, text = q.Text });
+                Collect<QrCodeSignature>(options, (q, document) =>
+                    new { type = "qrcode", document, page = q.PageNumber, encodeType = q.EncodeType?.TypeName, text = q.Text });
             }
 
             if (typeLower is "barcode" or "all")
@@ -122,8 +142,8 @@ public static class VerifyTool
                 var options = new BarcodeSearchOptions { AllPages = true };
                 if (!string.IsNullOrWhiteSpace(text)) { options.Text = text; options.MatchType = TextMatchType.Contains; }
 
-                foreach (var b in sig.Search<BarcodeSignature>(options))
-                    entries.Add(new { type = "barcode", page = b.PageNumber, encodeType = b.EncodeType?.TypeName, text = b.Text });
+                Collect<BarcodeSignature>(options, (b, document) =>
+                    new { type = "barcode", document, page = b.PageNumber, encodeType = b.EncodeType?.TypeName, text = b.Text });
             }
 
             var prefix = licenseManager.IsLicensed

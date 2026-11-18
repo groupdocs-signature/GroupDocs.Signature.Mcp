@@ -152,7 +152,11 @@ To lift the limits with a license file:
 | Variable | Description | Default |
 |---|---|---|
 | `GROUPDOCS_MCP_STORAGE_PATH` | Base folder for input and output files | current directory |
-| `GROUPDOCS_MCP_OUTPUT_PATH` | *(Optional)* separate folder for output files | `GROUPDOCS_MCP_STORAGE_PATH` |
+| `GROUPDOCS_MCP_OUTPUT_PATH` | *(Optional)* separate folder for output files. **Must be inside `GROUPDOCS_MCP_STORAGE_PATH`** | `GROUPDOCS_MCP_STORAGE_PATH` |
+
+> Files are read only from `GROUPDOCS_MCP_STORAGE_PATH`. If the output folder sits outside it, signed files
+> are written where the server cannot read them back, so signing and then verifying or searching the result
+> fails with "not found in storage". The server prints a warning at startup when this is the case.
 | `GROUPDOCS_LICENSE_PATH` | Path to GroupDocs license file | (evaluation mode) |
 | `GROUPDOCS_METERED_PUBLIC_KEY` | Metered public key. Requires the private key too; takes precedence over the license file | (unset) |
 | `GROUPDOCS_METERED_PRIVATE_KEY` | Metered private key. **Secret** - see [Licensing](#licensing) | (unset) |

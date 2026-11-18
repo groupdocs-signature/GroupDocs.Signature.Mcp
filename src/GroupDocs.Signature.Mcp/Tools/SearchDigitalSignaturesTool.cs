@@ -48,19 +48,16 @@ public static class SearchDigitalSignaturesTool
                 ? new Signature(tempInput, loadOptions)
                 : new Signature(tempInput);
 
-            var signatures = sig.Search<DigitalSignature>(SignatureType.Digital);
+            var searchResult = ArchiveAwareSearch.Run(sig, new DigitalSearchOptions());
 
             var prefix = licenseManager.IsLicensed
                 ? string.Empty
                 : "[Evaluation mode] Results may be limited.\n\n";
 
-            if (signatures.Count == 0)
-                return $"{prefix}No digital signatures found in '{resolved.FileName}'.";
-
             var utcNow = DateTime.UtcNow;
             var certificateWarnings = new List<string>();
 
-            var results = signatures.Select(d =>
+            object Project(DigitalSignature d)
             {
                 var certificate = d.Certificate;
                 if (certificate != null)
@@ -98,11 +95,36 @@ public static class SearchDigitalSignaturesTool
                         validWhenSigned = CertificateValidity.WasValidWhenSigned(certificate, d.SignTime)
                     }
                 };
-            }).ToArray();
+            }
+
+            // An archive keeps its signatures one level down, per contained document.
+            var documents = ArchiveAwareSearch.Documents<DigitalSignature>(searchResult);
+            if (documents.Count > 0)
+            {
+                var perDocument = documents.Select(d => new
+                {
+                    fileName = d.FileName,
+                    found = d.Items.Count,
+                    signatures = d.Items.Select(Project).ToArray()
+                }).ToArray();
+
+                return prefix + JsonSerializer.Serialize(new
+                {
+                    found = perDocument.Sum(d => d.found),
+                    archive = true,
+                    documents = perDocument,
+                    certificateWarnings
+                }, JsonOptions);
+            }
+
+            var signatures = ArchiveAwareSearch.Signatures<DigitalSignature>(searchResult);
+            if (signatures.Count == 0)
+                return $"{prefix}No digital signatures found in '{resolved.FileName}'.";
 
             // Pitfall #16: return raw JSON.
             return prefix + JsonSerializer.Serialize(
-                new { found = signatures.Count, signatures = results, certificateWarnings }, JsonOptions);
+                new { found = signatures.Count, signatures = signatures.Select(Project).ToArray(), certificateWarnings },
+                JsonOptions);
         }
         catch (Exception ex)
         {

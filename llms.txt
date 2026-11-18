@@ -27,7 +27,7 @@ PDF, DOCX, XLSX, PPTX, JPEG, PNG, TIFF, and 30+ other document and image formats
 ## Environment variables
 
 - GROUPDOCS_MCP_STORAGE_PATH — base folder for input + output (defaults to current working directory)
-- GROUPDOCS_MCP_OUTPUT_PATH — optional, routes output files to a separate folder
+- GROUPDOCS_MCP_OUTPUT_PATH — optional, routes output files to a separate folder. Must be a subdirectory of GROUPDOCS_MCP_STORAGE_PATH: reads resolve only inside the storage folder, so an output folder outside it produces files the server cannot read back
 - GROUPDOCS_LICENSE_PATH — path to GroupDocs.Total.lic, omit for evaluation mode
 
 ## Licensing

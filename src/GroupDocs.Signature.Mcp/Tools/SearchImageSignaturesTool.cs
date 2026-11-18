@@ -48,16 +48,13 @@ public static class SearchImageSignaturesTool
                 ReturnContentType = FileType.PNG
             };
 
-            var signatures = sig.Search<ImageSignature>(options);
+            var searchResult = ArchiveAwareSearch.Run(sig, options);
 
             var prefix = licenseManager.IsLicensed
                 ? string.Empty
                 : "[Evaluation mode] Results may be limited.\n\n";
 
-            if (signatures.Count == 0)
-                return $"{prefix}No image signatures found in '{resolved.FileName}'.";
-
-            var results = signatures.Select((img, idx) => new
+            static object Project(ImageSignature img, int idx) => new
             {
                 index = idx + 1,
                 page = img.PageNumber,
@@ -69,10 +66,34 @@ public static class SearchImageSignaturesTool
                 imageBase64 = img.Content?.Length > 0
                     ? $"data:image/png;base64,{Convert.ToBase64String(img.Content)}"
                     : null
-            }).ToArray();
+            };
+
+            // An archive keeps its signatures one level down, per contained document.
+            var documents = ArchiveAwareSearch.Documents<ImageSignature>(searchResult);
+            if (documents.Count > 0)
+            {
+                var perDocument = documents.Select(d => new
+                {
+                    fileName = d.FileName,
+                    found = d.Items.Count,
+                    signatures = d.Items.Select(Project).ToArray()
+                }).ToArray();
+
+                return prefix + JsonSerializer.Serialize(new
+                {
+                    found = perDocument.Sum(d => d.found),
+                    archive = true,
+                    documents = perDocument
+                }, JsonOptions);
+            }
+
+            var signatures = ArchiveAwareSearch.Signatures<ImageSignature>(searchResult);
+            if (signatures.Count == 0)
+                return $"{prefix}No image signatures found in '{resolved.FileName}'.";
 
             // Pitfall #16: return raw JSON.
-            return prefix + JsonSerializer.Serialize(new { found = signatures.Count, signatures = results }, JsonOptions);
+            return prefix + JsonSerializer.Serialize(
+                new { found = signatures.Count, signatures = signatures.Select(Project).ToArray() }, JsonOptions);
         }
         catch (Exception ex)
         {

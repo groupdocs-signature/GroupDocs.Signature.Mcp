@@ -57,19 +57,13 @@ public static class SearchQrCodesTool
                 options.MatchType = TextMatchType.Contains;
             }
 
-            var signatures = sig.Search<QrCodeSignature>(options);
+            var searchResult = ArchiveAwareSearch.Run(sig, options);
 
             var prefix = licenseManager.IsLicensed
                 ? string.Empty
                 : "[Evaluation mode] Results may be limited.\n\n";
 
-            if (signatures.Count == 0)
-            {
-                var hint = text != null ? $" matching '{text}'" : string.Empty;
-                return $"{prefix}No QR code signatures{hint} found in '{resolved.FileName}'.";
-            }
-
-            var results = signatures.Select(q => new
+            object Project(QrCodeSignature q) => new
             {
                 page = q.PageNumber,
                 type = q.EncodeType?.TypeName,
@@ -81,10 +75,37 @@ public static class SearchQrCodesTool
                 imageBase64 = returnImage && q.Content?.Length > 0
                     ? $"data:image/png;base64,{Convert.ToBase64String(q.Content)}"
                     : null
-            }).ToArray();
+            };
+
+            // An archive keeps its signatures one level down, per contained document.
+            var documents = ArchiveAwareSearch.Documents<QrCodeSignature>(searchResult);
+            if (documents.Count > 0)
+            {
+                var perDocument = documents.Select(d => new
+                {
+                    fileName = d.FileName,
+                    found = d.Items.Count,
+                    signatures = d.Items.Select(Project).ToArray()
+                }).ToArray();
+
+                return prefix + JsonSerializer.Serialize(new
+                {
+                    found = perDocument.Sum(d => d.found),
+                    archive = true,
+                    documents = perDocument
+                }, JsonOptions);
+            }
+
+            var signatures = ArchiveAwareSearch.Signatures<QrCodeSignature>(searchResult);
+            if (signatures.Count == 0)
+            {
+                var hint = text != null ? $" matching '{text}'" : string.Empty;
+                return $"{prefix}No QR code signatures{hint} found in '{resolved.FileName}'.";
+            }
 
             // Pitfall #16: return raw JSON.
-            return prefix + JsonSerializer.Serialize(new { found = signatures.Count, signatures = results }, JsonOptions);
+            return prefix + JsonSerializer.Serialize(
+                new { found = signatures.Count, signatures = signatures.Select(Project).ToArray() }, JsonOptions);
         }
         catch (Exception ex)
         {
