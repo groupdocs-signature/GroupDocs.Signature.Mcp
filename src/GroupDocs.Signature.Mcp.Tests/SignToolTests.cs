@@ -130,36 +130,38 @@ public class SignToolTests
         ThenNothingWasWritten();
     }
 
-    [Theory]
-    [InlineData("数字签名 — ok")]   // CJK + em dash
-    [InlineData("承認済み ✔")]      // CJK + heavy check mark
-    public async Task Sign_QrPayloadKnownToCorrupt_IsRefused(string payload)
+    [Fact]
+    public async Task Sign_QrPayload_WhenWhatWasEncodedDiffers_IsRefused()
     {
-        GivenAnyResolvableFile();
+        // Licensed path: the tool reads the QR back and compares. Here the comparison fails because the
+        // unlicensed barcode reader rewrites what it returns - which is exactly the mismatch branch under
+        // test. The real corruption case is covered by the live probe, which needs a licence.
+        _licenseManager.Setup(l => l.IsLicensed).Returns(true);
+        GivenRealDocument();
 
         var result = await SignTool.Sign(
             _resolver.Object, _storage.Object, _licenseManager.Object, _output,
-            new FileInput { FilePath = "doc.pdf" }, type: "qrcode", text: payload);
+            new FileInput { FilePath = "sample.pdf" }, type: "qrcode",
+            text: "— 数字签名");
 
-        // The engine encodes these to a QR code that scans cleanly and carries wrong data, so refusing
-        // is deliberate. Interim - delete with the guard once the encoder is fixed.
         Assert.Contains("QR payload refused", result);
         ThenNothingWasWritten();
     }
 
     [Theory]
-    [InlineData("数字签名")]             // CJK alone round-trips correctly
-    [InlineData("abc 数字签名")]         // so does CJK after Latin
-    [InlineData("plain ascii — with em dash")]      // em dash without CJK is fine
-    public async Task Sign_QrPayloadWithoutTheTrigger_IsNotRefused(string payload)
+    [InlineData("数字签名")]          // CJK alone
+    [InlineData("数字签名 —")]   // the same symbol AFTER the CJK round-trips fine
+    [InlineData("— 数字签名")]   // even the corrupting shape, when unlicensed
+    public async Task Sign_QrPayload_WithoutALicence_IsNeverRefused(string payload)
     {
-        GivenAnyResolvableFile();
+        // Without a licence the reader cannot be trusted, so verification is skipped rather than refusing
+        // everything. The old predicate had no such gate and refused payloads that were perfectly fine.
+        GivenRealDocument();
 
         var result = await SignTool.Sign(
             _resolver.Object, _storage.Object, _licenseManager.Object, _output,
-            new FileInput { FilePath = "doc.pdf" }, type: "qrcode", text: payload);
+            new FileInput { FilePath = "sample.pdf" }, type: "qrcode", text: payload);
 
-        // It fails later on the dummy document, which is fine - what matters is that the guard let it past.
         Assert.DoesNotContain("QR payload refused", result);
     }
 
